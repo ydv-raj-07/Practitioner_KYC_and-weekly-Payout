@@ -7,3 +7,10 @@ node_modules
 .windsurf
 .agents
 
+node_modules/
+dist/
+.env
+uploads/*
+!uploads/.gitkeep
+uploads-test/
+*.log
