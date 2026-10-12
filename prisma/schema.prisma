@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PractitionerStatus {
+  submitted
+  under_review
+  approved
+  rejected
+}
+
+model Practitioner {
+  id          String             @id @default(uuid()) @db.Uuid
+  displayName String 
+  nameEnc     String 
+  panEnc      String 
+  phoneEnc    String 
+  panHash     String             @unique 
+  skills      String[]
+  status      PractitionerStatus @default(submitted)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  documents Document[]
+  earnings  Earning[]
+  payouts   Payout[]
+}
+
+model Document {
+  id             String       @id @default(uuid()) @db.Uuid
+  practitionerId String       @db.Uuid
+  practitioner   Practitioner @relation(fields: [practitionerId], references: [id])
+  originalName   String
+  mimeType       String
+  sizeBytes      Int
+  storedName     String
+  createdAt      DateTime     @default(now())
+
+  @@index([practitionerId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorId      String
+  actorRole    String
+  action       String
+  resourceType String
+  resourceId   String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([resourceType, resourceId])
+  @@index([actorId])
+}
+
+model Earning {
+  id             String       @id @default(uuid()) @db.Uuid
+  practitionerId String       @db.Uuid
+  practitioner   Practitioner @relation(fields: [practitionerId], references: [id])
+  amountPaise    Int
+  earnedAt       DateTime
+  description    String?
+
+  @@index([practitionerId, earnedAt])
+}
+
+model Payout {
+  id                 String       @id @default(uuid()) @db.Uuid
+  practitionerId     String       @db.Uuid
+  practitioner       Practitioner @relation(fields: [practitionerId], references: [id])
+  weekLabel          String 
+  weekStart          DateTime     @db.Date
+  grossPaise         Int
+  platformSharePaise Int
+  tdsPaise           Int
+  netPaise           Int
+  createdAt          DateTime     @default(now())
+
+  @@unique([practitionerId, weekStart])
+}
